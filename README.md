@@ -54,7 +54,7 @@ sudo bash deploy/scripts/setup-vps.sh
 
 ```bash
 cd /var/www/sobrapsi
-git clone <repo-url> .
+git clone https://github.com/vjmpinheiro/Sobrapsi.git .
 cp .env.production.example .env
 # Edite .env: senhas, SESSION_SECRET, ENCRYPTION_KEY, domínio
 docker compose up -d
