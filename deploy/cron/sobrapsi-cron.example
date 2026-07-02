@@ -1,0 +1,8 @@
+# Crontab na VPS (crontab -e)
+# Substitua DOMINIO e CRON_SECRET pelos valores reais.
+
+# Status de anuidade + lembretes — diariamente às 06:00
+0 6 * * * curl -fsS -X POST -H "Authorization: Bearer CRON_SECRET" https://DOMINIO/api/cron/membership >> /var/log/sobrapsi-cron.log 2>&1
+
+# Backup diário às 03:00
+0 3 * * * cd /var/www/sobrapsi && bash deploy/scripts/backup.sh >> /var/log/sobrapsi-backup.log 2>&1

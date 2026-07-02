@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sobrapsi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sobrapsi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sobrapsi}
+      POSTGRES_DB: ${POSTGRES_DB:-sobrapsi}
+    ports:
+      - "${POSTGRES_BIND:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - sobrapsi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-sobrapsi} -d ${POSTGRES_DB:-sobrapsi}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  sobrapsi_pgdata:

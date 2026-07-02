@@ -1,0 +1,508 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  candidate
+  member
+  secretaria
+  reviewer
+  finance
+  editor
+  admin
+  superadmin
+}
+
+enum ApplicationStatus {
+  draft
+  submitted
+  awaiting_review
+  in_review
+  awaiting_complement
+  complemented
+  approved_pending_payment
+  approved
+  rejected
+  cancelled_by_candidate
+  expired
+}
+
+enum MemberStatus {
+  active
+  expiring
+  expired
+  suspended
+  cancelled
+  inactive
+  deceased
+  honorary
+}
+
+enum MemberCategory {
+  student
+  psychoanalyst
+  supervisor
+  researcher
+  institutional
+  honorary
+}
+
+enum DocumentStatus {
+  uploaded
+  awaiting_review
+  approved
+  rejected
+  replaced
+  expired
+}
+
+enum PaymentStatus {
+  not_applicable
+  pending
+  paid
+  exempt
+  overdue
+  refunded
+  cancelled
+  disputed
+}
+
+enum PublicProfileReviewStatus {
+  draft
+  pending_review
+  approved
+  rejected
+}
+
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String?   @map("password_hash")
+  role              UserRole  @default(candidate)
+  staffEditor       Boolean   @default(false) @map("staff_editor")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  lastLoginAt       DateTime? @map("last_login_at")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+
+  person            Person?
+  applications      Application[]
+  documents         Document[]
+  payments          Payment[]
+  member            Member?
+  consents          Consent[]
+  auditLogs         AuditLog[]    @relation("AuditActor")
+  adminNotes        AdminNote[]
+  contentPages      ContentPage[]
+  articles          Article[]
+
+  @@map("users")
+}
+
+model Person {
+  id           String   @id @default(cuid())
+  userId       String   @unique @map("user_id")
+  fullName     String   @map("full_name")
+  socialName   String?  @map("social_name")
+  cpfEncrypted String?  @map("cpf_encrypted")
+  rgEncrypted  String?  @map("rg_encrypted")
+  birthDate    DateTime? @map("birth_date")
+  nationality  String?
+  address      String?
+  city         String?
+  state        String?
+  zipCode      String?  @map("zip_code")
+  email        String
+  phone        String?
+  phoneAlt     String?  @map("phone_alt")
+  rgIssuer     String?  @map("rg_issuer")
+  profession   String?
+  occupation   String?
+  institution  String?
+  cnpj         String?
+  professionalWebsite String? @map("professional_website")
+  linkedin     String?
+  instagram    String?
+  practiceCity String?  @map("practice_city")
+  practiceModality String? @map("practice_modality")
+  studyAreas   String?  @map("study_areas")
+  authorizePublicProfessional Boolean @default(false) @map("authorize_public_professional")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("people")
+}
+
+model Application {
+  id                     String            @id @default(cuid())
+  userId                 String?           @map("user_id")
+  categoryRequested      MemberCategory    @map("category_requested")
+  status                 ApplicationStatus @default(draft)
+  submittedAt            DateTime?         @map("submitted_at")
+  reviewedAt             DateTime?         @map("reviewed_at")
+  reviewerId             String?           @map("reviewer_id")
+  decision               String?
+  decisionReasonInternal String?           @map("decision_reason_internal")
+  decisionReasonPublic   String?           @map("decision_reason_public")
+  currentStep            Int               @default(1) @map("current_step")
+  attendingCourseType    String?           @map("attending_course_type")
+  attendingInstitution   String?           @map("attending_institution")
+  attendingInstitutionOther String?        @map("attending_institution_other")
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @updatedAt @map("updated_at")
+
+  user              User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  candidate         ApplicationCandidate?
+  applicationConsents ApplicationConsent[]
+  educationRecords  EducationRecord[]
+  curriculumRecord  CurriculumRecord?
+  documents         Document[]
+  payments          Payment[]
+  adminNotes        AdminNote[]
+  member            Member?
+  publicProfileDraft ApplicationPublicProfile?
+
+  @@map("applications")
+}
+
+model ApplicationCandidate {
+  id                      String    @id @default(cuid())
+  applicationId           String    @unique @map("application_id")
+  fullName                String    @map("full_name")
+  socialName              String?   @map("social_name")
+  cpfEncrypted            String?   @map("cpf_encrypted")
+  rgEncrypted             String?   @map("rg_encrypted")
+  birthDate               DateTime? @map("birth_date")
+  nationality             String?
+  address                 String?
+  city                    String?
+  state                   String?
+  zipCode                 String?   @map("zip_code")
+  email                   String
+  phone                   String?
+  phoneAlt                String?   @map("phone_alt")
+  rgIssuer                String?   @map("rg_issuer")
+  profession              String?
+  occupation              String?
+  institution             String?
+  cnpj                    String?
+  professionalWebsite     String?   @map("professional_website")
+  linkedin                String?
+  instagram               String?
+  practiceCity            String?   @map("practice_city")
+  practiceModality        String?   @map("practice_modality")
+  studyAreas              String?   @map("study_areas")
+  authorizePublicProfessional Boolean @default(false) @map("authorize_public_professional")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_candidates")
+}
+
+model ApplicationConsent {
+  id            String   @id @default(cuid())
+  applicationId String   @map("application_id")
+  consentType   String   @map("consent_type")
+  version       String
+  acceptedAt    DateTime @default(now()) @map("accepted_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_consents")
+}
+
+model ApplicationPublicProfile {
+  id                    String  @id @default(cuid())
+  applicationId         String  @unique @map("application_id")
+  publicName            String  @map("public_name")
+  publicCity            String? @map("public_city")
+  publicState           String? @map("public_state")
+  publicBio             String? @map("public_bio")
+  publicEducationSummary String? @map("public_education_summary")
+  publicStudyAreas      String? @map("public_study_areas")
+  publicWebsite         String? @map("public_website")
+  publicLinkedin        String? @map("public_linkedin")
+  publicInstagram       String? @map("public_instagram")
+  authorizeList         Boolean @default(false) @map("authorize_list")
+  authorizePhoto        Boolean @default(false) @map("authorize_photo")
+  authorizeBio          Boolean @default(false) @map("authorize_bio")
+  authorizeLinks        Boolean @default(false) @map("authorize_links")
+  profilePhotoPath      String? @map("profile_photo_path")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_public_profiles")
+}
+
+model EducationRecord {
+  id                    String   @id @default(cuid())
+  applicationId         String   @map("application_id")
+  institution           String
+  courseName            String   @map("course_name")
+  courseType            String?  @map("course_type")
+  workload              Int?
+  startDate             DateTime? @map("start_date")
+  endDate               DateTime? @map("end_date")
+  status                String?
+  modality              String?
+  certificateDocumentId String?  @map("certificate_document_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("education_records")
+}
+
+model CurriculumRecord {
+  id                     String  @id @default(cuid())
+  applicationId          String  @unique @map("application_id")
+  summary                String?
+  clinicalExperience     String? @map("clinical_experience")
+  personalAnalysisStatus String? @map("personal_analysis_status")
+  supervisionStatus      String? @map("supervision_status")
+  analysisHours          Int?    @map("analysis_hours")
+  analystName            String? @map("analyst_name")
+  supervisionHours       Int?    @map("supervision_hours")
+  supervisorName           String? @map("supervisor_name")
+  studyGroups            String? @map("study_groups")
+  publications           String?
+  events                 String?
+  research               String?
+  notes                  String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("curriculum_records")
+}
+
+model Document {
+  id              String         @id @default(cuid())
+  ownerUserId     String?        @map("owner_user_id")
+  applicationId   String?        @map("application_id")
+  documentType    String         @map("document_type")
+  filePath        String         @map("file_path")
+  fileName        String         @map("file_name")
+  mimeType        String         @map("mime_type")
+  size            Int
+  status          DocumentStatus @default(uploaded)
+  reviewedBy      String?        @map("reviewed_by")
+  reviewedAt      DateTime?      @map("reviewed_at")
+  rejectionReason String?        @map("rejection_reason")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  owner       User?        @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@map("documents")
+}
+
+model Member {
+  id                       String         @id @default(cuid())
+  userId                   String         @unique @map("user_id")
+  applicationId            String?        @unique @map("application_id")
+  registrationNumber       String         @unique @map("registration_number")
+  legacyRegistrationNumber String?        @map("legacy_registration_number")
+  category                 MemberCategory
+  status                   MemberStatus   @default(active)
+  approvedAt               DateTime?      @map("approved_at")
+  validUntil               DateTime?      @map("valid_until")
+  suspendedAt              DateTime?      @map("suspended_at")
+  cancelledAt              DateTime?      @map("cancelled_at")
+  createdAt                DateTime       @default(now()) @map("created_at")
+  updatedAt                DateTime       @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application     Application?     @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  publicProfile   PublicProfile?
+  membershipCard  MembershipCard?
+  payments        Payment[]
+  adminNotes      AdminNote[]
+
+  @@map("members")
+}
+
+model PublicProfile {
+  id                    String                    @id @default(cuid())
+  memberId              String                    @unique @map("member_id")
+  publicName            String                    @map("public_name")
+  publicCity            String?                   @map("public_city")
+  publicState           String?                   @map("public_state")
+  publicBio             String?                   @map("public_bio")
+  publicEducationSummary String?                  @map("public_education_summary")
+  publicStudyAreas      String?                   @map("public_study_areas")
+  publicWebsite         String?                   @map("public_website")
+  publicLinkedin        String?                   @map("public_linkedin")
+  publicInstagram       String?                   @map("public_instagram")
+  publicPhotoUrl        String?                   @map("public_photo_url")
+  publishPhoto          Boolean                   @default(false) @map("publish_photo")
+  publishBio            Boolean                   @default(false) @map("publish_bio")
+  publishLinks          Boolean                   @default(false) @map("publish_links")
+  isPublic              Boolean                   @default(false) @map("is_public")
+  reviewStatus          PublicProfileReviewStatus @default(draft) @map("review_status")
+  reviewedBy            String?                   @map("reviewed_by")
+  reviewedAt            DateTime?                 @map("reviewed_at")
+  createdAt             DateTime                  @default(now()) @map("created_at")
+  updatedAt             DateTime                  @updatedAt @map("updated_at")
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("public_profiles")
+}
+
+model MembershipCard {
+  id         String   @id @default(cuid())
+  memberId   String   @unique @map("member_id")
+  cardNumber String   @map("card_number")
+  pdfPath    String?  @map("pdf_path")
+  qrToken    String   @unique @map("qr_token")
+  issuedAt   DateTime @default(now()) @map("issued_at")
+  validUntil DateTime? @map("valid_until")
+  status     String   @default("active")
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("membership_cards")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String        @map("user_id")
+  memberId          String?       @map("member_id")
+  applicationId     String?       @map("application_id")
+  type              String
+  provider          String?
+  providerPaymentId String?       @map("provider_payment_id")
+  amount            Float
+  status            PaymentStatus @default(pending)
+  dueDate           DateTime?     @map("due_date")
+  paidAt            DateTime?     @map("paid_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  member      Member?      @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  beforeJson  String?  @map("before_json")
+  afterJson   String?  @map("after_json")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model AdminNote {
+  id            String   @id @default(cuid())
+  applicationId String?  @map("application_id")
+  memberId      String?  @map("member_id")
+  authorId      String   @map("author_id")
+  note          String
+  visibility    String   @default("internal")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  member      Member?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("admin_notes")
+}
+
+model Consent {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  consentType String   @map("consent_type")
+  version     String
+  acceptedAt  DateTime @default(now()) @map("accepted_at")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consents")
+}
+
+model ContentPage {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  body           String
+  seoTitle       String?       @map("seo_title")
+  seoDescription String?       @map("seo_description")
+  status         ContentStatus @default(draft)
+  publishedAt    DateTime?     @map("published_at")
+  authorId       String?       @map("author_id")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@map("content_pages")
+}
+
+model Article {
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  excerpt          String?
+  body             String
+  categories       String[]      @default([])
+  featuredImageUrl String?       @map("featured_image_url")
+  authorId         String?       @map("author_id")
+  status           ContentStatus @default(draft)
+  seoTitle         String?       @map("seo_title")
+  seoDescription   String?       @map("seo_description")
+  seoKeywords      String?       @map("seo_keywords")
+  publishedAt      DateTime?     @map("published_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@map("articles")
+}
+
+model Event {
+  id                   String        @id @default(cuid())
+  title                String
+  slug                 String        @unique
+  description          String
+  startDate            DateTime      @map("start_date")
+  endDate              DateTime?     @map("end_date")
+  location             String?
+  modality             String?
+  registrationUrl      String?       @map("registration_url")
+  certificateAvailable Boolean       @default(false) @map("certificate_available")
+  status               ContentStatus @default(draft)
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  @@map("events")
+}

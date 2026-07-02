@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .site-shell {
+    @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, #8a5cf5 40%, transparent);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .article-content h2 {
+    @apply mb-4 mt-8 text-2xl font-bold text-white;
+  }
+
+  .article-content h3 {
+    @apply mb-3 mt-6 text-xl font-bold text-white;
+  }
+
+  .article-content p {
+    @apply mb-4;
+  }
+
+  .article-content ul {
+    @apply mb-4 list-disc space-y-2 pl-6;
+  }
+
+  .article-content ol {
+    @apply mb-4 list-decimal space-y-2 pl-6;
+  }
+
+  .article-content blockquote {
+    @apply my-6 border-l-4 border-primary/50 pl-4 italic text-zinc-300;
+  }
+
+  .article-content a {
+    @apply text-primary underline;
+  }
+
+  .article-content strong {
+    @apply font-bold text-white;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    color: #71717a;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .mercadopago-brick-shell {
+    width: 100%;
+    min-width: 0;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] form {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] .mp-card-form-panel,
+  .mercadopago-brick-shell [id^="paymentBrick_"] form > div:has(input[type="radio"]) {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] button[type="submit"] {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] [data-mp-title="true"] {
+    display: none !important;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] [data-mp-payment-row="true"],
+  .mercadopago-brick-shell [id^="paymentBrick_"] label:has(input[type="radio"]),
+  .mercadopago-brick-shell [id^="paymentBrick_"] div:has(> input[type="radio"]) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 14px 12px;
+    box-sizing: border-box;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] [data-mp-payment-row="true"] img,
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] [data-mp-payment-row="true"] svg,
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] label:has(input[type="radio"]) img,
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] label:has(input[type="radio"]) svg {
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px;
+    max-height: 28px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] [data-mp-spacing="field-row"],
+  .mercadopago-brick-shell [id^="paymentBrick_"] [data-mp-spacing="brand"] {
+    margin-top: 24px;
+  }
+
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] .mp-card-form-panel label:not(:has(input[type="radio"])) {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .mercadopago-brick-shell [data-mp-method="pix_boleto"] [id^="paymentBrick_"] .mp-card-form-panel p {
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+
+  .mercadopago-brick-shell [id^="paymentBrick_"] .mp-card-form-panel label:not(:has(input[type="radio"])) {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 6px;
+  }
+}
